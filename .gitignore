@@ -1,0 +1,6 @@
+hex-server
+hex-server.tar
+output.txt
+obj/
+
+**/.*.swp
