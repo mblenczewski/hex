@@ -9,3 +9,5 @@ agents/example_cpp_agent/run.sh,agents/example_python3_agent/run.sh
 # java agent requires at least 16 threads, even with the minimal JVM options,
 # which means that --threads 16 must be passed to tournament-host.py
 #agents/example_java_agent/run.sh,agents/example_python3_agent/run.sh
+
+agents/example_python3_agent/run.sh,agents/hexes/run.sh
