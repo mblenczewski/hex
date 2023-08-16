@@ -7,8 +7,13 @@
 
 struct opts opts = {
 	.log_level = LOG_INFO,
-	.agent_type = AGENT_MCTS,
+	.agent_type = AGENT_RANDOM,
+	.host = NULL,
+	.port = NULL,
 };
+
+static bool
+argparse(int argc, char **argv, struct opts *opts);
 
 enum game_state {
 	GAME_START,
@@ -52,14 +57,13 @@ main(int argc, char **argv)
 {
 	srandom(getpid());
 
-	if (argc < 3) {
-		dbglog(LOG_ERROR, "Usage: %s <host> <port>\n", argv[0]);
-		exit(EXIT_FAILURE);
-	}
+	if (!argparse(argc, argv, &opts)) exit(EXIT_FAILURE);
 
-	char *host = argv[1], *port = argv[2];
-	if (!network_init(&game.network, host, port)) {
-		dbglog(LOG_ERROR, "Failed to initialise network (connecting to %s:%s)\n", host, port);
+	dbglog(LOG_DEBUG, "Opts: log_level: %" PRIu32 ", agent_type: %" PRIu32 ", host: %s, port: %s\n",
+			opts.log_level, opts.agent_type, opts.host, opts.port);
+
+	if (!network_init(&game.network, opts.host, opts.port)) {
+		dbglog(LOG_ERROR, "Failed to initialise network (connecting to %s:%s)\n", opts.host, opts.port);
 		exit(EXIT_FAILURE);
 	}
 
@@ -83,6 +87,48 @@ main(int argc, char **argv)
 	network_free(&game.network);
 
 	exit(EXIT_SUCCESS);
+}
+
+static bool
+argparse(int argc, char **argv, struct opts *opts)
+{
+	assert(opts);
+
+	char const *optstr = "va:";
+
+	int opt;
+	while ((opt = getopt(argc, argv, optstr)) != -1) {
+		switch (opt) {
+		case 'v':
+			opts->log_level = LOG_DEBUG;
+			break;
+
+		case 'a':
+			if (strcmp(optarg, "random") == 0) {
+				opts->agent_type = AGENT_RANDOM;
+			} else if (strcmp(optarg, "mcts") == 0) {
+				opts->agent_type = AGENT_MCTS;
+			} else {
+				fprintf(stderr, "Unknown agent: %s.\n", optarg);
+				goto error;
+			}
+			break;
+
+		default: goto error; /* ? */
+		}
+	}
+
+	if (optind + 2 > argc) goto error;
+
+	opts->host = argv[optind++];
+	opts->port = argv[optind];
+
+	return true;
+
+error:
+	fprintf(stderr, "Usage: %s [-v] [-a random|mcts] <host> <port>\n", argv[0]);
+
+	return false;
 }
 
 static void

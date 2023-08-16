@@ -39,6 +39,7 @@
 
 struct opts {
 	u32 log_level, agent_type;
+	char *host, *port;
 };
 
 extern struct opts opts;
