@@ -19,9 +19,9 @@ hex-server: Building
 To build the server, run the following shell commands in the project's root
 directory:
 ```sh
-$ make build    # default, builds only the hex server
+$ make all      # default, builds the hex server and all included agents
+$ make build    # optional, builds only the hex server
 $ make extra    # optional, builds all included agents
-$ make all      # optional, builds the hex server and all included agents
 ```
 
 To clean all built artefacts, run the following shell commands:
@@ -166,40 +166,40 @@ Protocol Messages:
 An example of this protocol defined in a C-like language is as follows:
 ```c
 enum player_type : u32 {
-	PLAYER_BLACK	= 0,
-	PLAYER_WHITE	= 1,
+  PLAYER_BLACK  = 0,
+  PLAYER_WHITE  = 1,
 };
 
 enum msg_type : u32 {
-	MSG_START	= 0,
-	MSG_MOVE	= 1,
-	MSG_SWAP	= 2,
-	MSG_END		= 3,
+  MSG_START = 0,
+  MSG_MOVE  = 1,
+  MSG_SWAP  = 2,
+  MSG_END   = 3,
 };
 
 union msg_data {
-	struct {
-		enum player_type player;
+  struct {
+    enum player_type player;
     u32 board_size;
     u32 game_secs;
-		u32 thread_limit;
-		u32 mem_limit_mib; // NOTE: in units of MiB
-	} start;
+    u32 thread_limit;
+    u32 mem_limit_mib; // NOTE: in units of MiB
+  } start;
 
-	struct {
-		u32 board_x;
-		u32 board_y;
-	} move;
+  struct {
+    u32 board_x;
+    u32 board_y;
+  } move;
 
 /* struct { } swap; */ // NOTE: swap has no parameters
 
-	struct {
-		enum player_type winner;
-	} end;
+  struct {
+    enum player_type winner;
+  } end;
 };
 
 struct msg {
-	enum msg_type type;
-	union msg_data data;
+  enum msg_type type;
+  union msg_data data;
 };
 ```
