@@ -87,20 +87,26 @@ mcts_node_calc_score(struct mcts_node *self)
 	 */
 	if (!self->plays) return INFINITY;
 
-	s64 exploration_rounds = 300;
+	s64 exploration_rounds = 3000;
 	f32 beta = MAX(0.0, (exploration_rounds - self->plays) / (f32) exploration_rounds);
 	assert(0.0 <= beta && beta <= 1.0);
 
 	dbglog(LOG_DEBUG, "beta: %lf, wins: %d, rave_wins: %d, plays: %u, rave_plays: %u\n",
 			  beta, self->wins, self->rave_wins, self->plays, self->rave_plays);
 
-	f32 exploration = 0; // TODO: implement exploration parameter
+	struct mcts_node *parent = mcts_node_rel2abs(self, self->parent);
+	assert(parent);
+
+	f32 exploration = M_SQRT2 * sqrtf(logf(parent->plays) / (f32) self->plays);
 
 	f32 exploitation = (1 - beta) * ((f32) self->wins / (f32) self->plays);
 	assert(-1.0 <= exploitation && exploitation <= 1.0);
 
 	f32 rave_exploitation = beta * ((f32) self->rave_wins / (f32) self->rave_plays);
 	assert(-1.0 <= rave_exploitation && rave_exploitation <= 1.0);
+
+	dbglog(LOG_DEBUG, "exploration: %f, exploitation: %f, rave_exploitation: %f\n",
+			exploration, exploitation, rave_exploitation);
 
 	return exploration + exploitation + rave_exploitation;
 }
@@ -175,12 +181,23 @@ agent_mcts_play(struct agent_mcts *self, enum hex_player player, u32 x, u32 y)
 	self->root = mem_pool_alloc(&self->pool, alignof(struct mcts_node), mcts_node_sizeof(moves));
 	mcts_node_init(self->root, NULL, player, x, y, moves);
 
-	// TODO: implement tree compaction and tree reuse, if it improves play
+	// TODO: implement tree reuse, if it improves play
+	//
 	//       one possible issue is children containing stale board states,
-	//       leading to potentially invalid moves being generated. another
-	//       is the simple fact that walking the tree to compact it takes
-	//       a significant amount of time and potentially outweighs simply
-	//       resetting the pool and performing a few more rounds of MCTS
+	//       leading to potentially invalid moves being generated.
+
+	// TODO: implement tree compaction
+	//       one possible issue is the fact that walking the tree to
+	//       compact it takes a significant amount of time and potentially
+	//       outweighs simply resetting the pool and performing a few more
+	//       rounds of MCTS.
+	//
+	//       another option would be to implement some form of cyclic
+	//       memory pool, to allow allocations from memory behind the
+	//       current root node, as well as in front of it, but this would
+	//       require tracking stale leaf nodes and reclaiming them (hence
+	//       transforms into a GC, and thus wastes the benefits of a
+	//       simple memory pool)
 }
 
 void
