@@ -207,7 +207,10 @@ main(int argc, char *argv[])
 	State state = State::START;
 	std::unique_ptr<Board> board;
 
-	enum hex_player player, opponent, winner;
+	/* initialised to satisfy GCC's linter and sanitiser */
+	enum hex_player player = HEX_PLAYER_BLACK;
+	enum hex_player opponent = HEX_PLAYER_WHITE;
+	enum hex_player winner = HEX_PLAYER_BLACK;
 
 	// game parameters (unused)
 	u32 game_secs, thread_limit, mem_limit_mib;
@@ -226,6 +229,7 @@ main(int argc, char *argv[])
 			}
 
 			player = static_cast<enum hex_player>(msg.data.start.player);
+			opponent = hexopponent(player);
 			game_secs = msg.data.start.game_secs;
 			thread_limit = msg.data.start.thread_limit;
 			mem_limit_mib = msg.data.start.mem_limit_mib;
@@ -234,21 +238,14 @@ main(int argc, char *argv[])
 
 			board = std::make_unique<Board>(board_size, rand);
 
-			switch (player) {
-			case HEX_PLAYER_BLACK:
-				opponent = HEX_PLAYER_WHITE;
-				state = State::SEND;
-				break;
-
-			case HEX_PLAYER_WHITE:
-				opponent = HEX_PLAYER_BLACK;
-				state = State::RECV;
-				break;
-			}
-
 			std::cout << "[" << hexplayerstr(player) << "] Starting game: "
 				  << board_size << "x" << board_size << ", "
 				  << game_secs << "secs" << std::endl;
+
+			switch (player) {
+			case HEX_PLAYER_BLACK: state = State::SEND; break;
+			case HEX_PLAYER_WHITE: state = State::RECV; break;
+			}
 		} break;
 
 		case State::RECV: {
