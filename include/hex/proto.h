@@ -28,6 +28,7 @@ hexopponent(enum hex_player player)
 	switch (player) {
 	case HEX_PLAYER_BLACK: return HEX_PLAYER_WHITE;
 	case HEX_PLAYER_WHITE: return HEX_PLAYER_BLACK;
+	default: assert(false); return HEX_PLAYER_BLACK;
 	}
 }
 
