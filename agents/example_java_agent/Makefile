@@ -7,8 +7,7 @@ SRC		:= src
 OBJ		:= obj
 
 JLINT		:= -deprecation -Xlint:unchecked
-JTARGET		:= -source 17 -target 17
-JCFLAGS		:= -d $(OBJ) -cp $(SRC) -g $(JLINT) $(JTARGET)
+JCFLAGS		:= -d $(OBJ) -cp $(SRC) -g $(JLINT)
 
 TARGET		:= agent.jar
 MANIFEST	:= MANIFEST.txt
