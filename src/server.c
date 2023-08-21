@@ -121,9 +121,20 @@ server_spawn_agent(struct server_state *state, struct agent_state *agent_state)
 		dbglog("[server] Child process '%" PRIi32 "', exec()-ing agent: '%s'\n",
 			pid, agent_state->agent);
 
-		freopen("/dev/null", "rb", stdin);
-		freopen(agent_state->logfile, "wb", stdout);
-		freopen(agent_state->logfile, "wb", stderr);
+		if (!freopen("/dev/null", "rb", stdin)) {
+			perror("freopen(stdin)");
+			exit(EXIT_FAILURE); /* fork()-d process can die without issue */
+		}
+
+		if (!freopen(agent_state->logfile, "wb", stdout)) {
+			perror("freopen(stdout)");
+			exit(EXIT_FAILURE); /* fork()-d process can die without issue */
+		}
+
+		if (!freopen(agent_state->logfile, "wb", stderr)) {
+			perror("freopen(stderr)");
+			exit(EXIT_FAILURE); /* fork()-d process can die without issue */
+		}
 
 		if (execve(agent_state->agent, args, env)) {
 			perror("execve");
