@@ -71,7 +71,10 @@ main(int argc, char **argv)
 	enum game_state game_state = GAME_START;
 	struct board board;
 
-	enum hex_player player, opponent, winner;
+	/* initialised to satisfy GCC's linters and sanitisers */
+	enum hex_player player = HEX_PLAYER_BLACK;
+	enum hex_player opponent = HEX_PLAYER_WHITE;
+	enum hex_player winner = HEX_PLAYER_BLACK;
 
 	u32 game_secs, thread_limit, mem_limit_mib; // currently unused
 	(void) game_secs; (void) thread_limit; (void) mem_limit_mib;
@@ -92,6 +95,7 @@ main(int argc, char **argv)
 
 			// unpack all parameters
 			player = msg.data.start.player;
+			opponent = hexopponent(player);
 			game_secs = msg.data.start.game_secs;
 			thread_limit = msg.data.start.thread_limit;
 			mem_limit_mib = msg.data.start.mem_limit_mib;
@@ -104,20 +108,13 @@ main(int argc, char **argv)
 				exit(EXIT_FAILURE);
 			}
 
-			switch (player) {
-			case HEX_PLAYER_BLACK:
-				opponent = HEX_PLAYER_WHITE;
-				game_state = GAME_SEND;
-				break;
-
-			case HEX_PLAYER_WHITE:
-				opponent = HEX_PLAYER_BLACK;
-				game_state = GAME_RECV;
-				break;
-			}
-
 			printf("[%s] Starting game: %" PRIu32 "x%" PRIu32 ", %" PRIu32 " secs\n",
 				hexplayerstr(player), board_size, board_size, game_secs);
+
+			switch (player) {
+			case HEX_PLAYER_BLACK: game_state = GAME_SEND; break;
+			case HEX_PLAYER_WHITE: game_state = GAME_RECV; break;
+			}
 		} break;
 
 		case GAME_RECV: {
@@ -442,3 +439,6 @@ hex_msg_try_deserialise(u8 buf[static HEX_MSG_SZ], struct hex_msg *out);
 
 extern inline char const *
 hexplayerstr(enum hex_player val);
+
+extern inline enum hex_player
+hexopponent(enum hex_player val);
